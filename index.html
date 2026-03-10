@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Friend Group Chaos Gallery</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel-2: #1f2430;
+      --text: #f3f5f7;
+      --muted: #a4adba;
+      --accent: #7a5cff;
+      --accent-2: #3dd9b3;
+      --danger: #ff5d73;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #1b1f2b 0%, var(--bg) 42%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: min(980px, 100%);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 8px 0 4px;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      letter-spacing: 0.4px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 22px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      box-shadow: var(--shadow);
+      transition: transform 0.18s ease, filter 0.2s ease;
+      min-height: 52px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px) scale(1.01);
+      filter: brightness(1.07);
+    }
+
+    .btn:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .btn-accent { background: linear-gradient(135deg, var(--accent), #947fff); }
+    .btn-chaos { background: linear-gradient(135deg, #ff914d, #ff4d7a); }
+    .btn-danger { background: linear-gradient(135deg, var(--danger), #ff7d62); }
+
+    #fileInput {
+      display: none;
+    }
+
+    .preview-wrap,
+    .gallery-wrap {
+      background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .preview {
+      width: 100%;
+      max-height: min(45vh, 420px);
+      object-fit: contain;
+      border-radius: 12px;
+      background: #0c0e13;
+    }
+
+    .preview-empty {
+      color: var(--muted);
+      margin: 12px 0;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      text-align: left;
+    }
+
+    .card {
+      background: #11151d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 160px;
+    }
+
+    .card img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      background: #08090d;
+    }
+
+    .card-footer {
+      padding: 10px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .time {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .delete-btn {
+      border: 0;
+      background: rgba(255, 93, 115, 0.2);
+      color: #ffd3da;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .empty {
+      color: var(--muted);
+      grid-column: 1 / -1;
+      padding: 16px;
+      text-align: center;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 16px;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .overlay figure {
+      margin: 0;
+      max-width: min(95vw, 1100px);
+      width: 100%;
+      text-align: center;
+    }
+
+    .overlay img {
+      width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      background: #050507;
+    }
+
+    .overlay figcaption {
+      color: #d7dbe2;
+      margin-top: 10px;
+    }
+
+    .hint {
+      color: var(--muted);
+      margin-top: 10px;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 520px) {
+      .btn {
+        width: 100%;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>📸 Chaos Crew Gallery</h1>
+    <p class="subtitle">Snap it, save it, summon random chaos.</p>
+
+    <section class="controls">
+      <label class="btn btn-accent" for="fileInput">Upload / Take Picture</label>
+      <button id="chaosBtn" class="btn btn-chaos" type="button">Chaos Button 🎲</button>
+      <button id="clearAllBtn" class="btn btn-danger" type="button">Delete All</button>
+    </section>
+
+    <input id="fileInput" type="file" accept="image/*" capture="environment" />
+
+    <section class="preview-wrap">
+      <h2>Latest Preview</h2>
+      <img id="previewImage" class="preview" alt="Latest uploaded" hidden />
+      <p id="previewEmpty" class="preview-empty">No image selected yet.</p>
+    </section>
+
+    <section class="gallery-wrap">
+      <h2>Saved Gallery</h2>
+      <div id="gallery" class="gallery"></div>
+    </section>
+  </main>
+
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Random fullscreen image">
+    <figure>
+      <img id="overlayImg" alt="Random chaos image" />
+      <figcaption id="overlayCaption"></figcaption>
+      <p class="hint">Tap anywhere to close</p>
+    </figure>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'chaosCrewGalleryImages';
+
+    const fileInput = document.getElementById('fileInput');
+    const previewImage = document.getElementById('previewImage');
+    const previewEmpty = document.getElementById('previewEmpty');
+    const gallery = document.getElementById('gallery');
+    const chaosBtn = document.getElementById('chaosBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const overlay = document.getElementById('overlay');
+    const overlayImg = document.getElementById('overlayImg');
+    const overlayCaption = document.getElementById('overlayCaption');
+
+    let images = loadImages();
+
+    function loadImages() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveImages() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(images));
+    }
+
+    function formatTime(ts) {
+      return new Date(ts).toLocaleString();
+    }
+
+    function showPreview(src) {
+      previewImage.src = src;
+      previewImage.hidden = false;
+      previewEmpty.hidden = true;
+    }
+
+    function renderGallery() {
+      gallery.innerHTML = '';
+
+      if (!images.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'No photos yet. Add one to start the chaos.';
+        gallery.appendChild(empty);
+        return;
+      }
+
+      images.forEach((item, index) => {
+        const card = document.createElement('article');
+        card.className = 'card';
+
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.alt = `Saved image ${index + 1}`;
+
+        const footer = document.createElement('div');
+        footer.className = 'card-footer';
+
+        const time = document.createElement('div');
+        time.className = 'time';
+        time.textContent = formatTime(item.timestamp);
+
+        const del = document.createElement('button');
+        del.className = 'delete-btn';
+        del.type = 'button';
+        del.textContent = 'Delete';
+        del.addEventListener('click', () => {
+          images.splice(index, 1);
+          saveImages();
+          renderGallery();
+        });
+
+        footer.append(time, del);
+        card.append(img, footer);
+        gallery.appendChild(card);
+      });
+    }
+
+    fileInput.addEventListener('change', (event) => {
+      const [file] = event.target.files || [];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const src = e.target.result;
+        const item = {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+          src,
+          timestamp: Date.now()
+        };
+
+        images.unshift(item);
+        saveImages();
+        showPreview(src);
+        renderGallery();
+      };
+      reader.readAsDataURL(file);
+
+      fileInput.value = '';
+    });
+
+    chaosBtn.addEventListener('click', () => {
+      if (!images.length) {
+        alert('No images saved yet. Add one first!');
+        return;
+      }
+
+      const random = images[Math.floor(Math.random() * images.length)];
+      overlayImg.src = random.src;
+      overlayCaption.textContent = `Captured: ${formatTime(random.timestamp)}`;
+      overlay.classList.add('show');
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      if (!images.length) return;
+      const ok = confirm('Delete all saved images?');
+      if (!ok) return;
+      images = [];
+      saveImages();
+      renderGallery();
+      previewImage.hidden = true;
+      previewEmpty.hidden = false;
+    });
+
+    overlay.addEventListener('click', () => {
+      overlay.classList.remove('show');
+      overlayImg.src = '';
+      overlayCaption.textContent = '';
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        overlay.classList.remove('show');
+      }
+    });
+
+    if (images.length) {
+      showPreview(images[0].src);
+    }
+    renderGallery();
+  </script>
+</body>
+</html>
